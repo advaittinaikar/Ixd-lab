@@ -3,7 +3,7 @@ LeapMotion leap;
 
 int intervalGap = 10000;
 
-ArrayList<PVector> points,notOccupied,Occupied;
+ArrayList<PVector> points,notOccupied,occupied;
 PGraphics letter;
 String message = "design";
 PImage p;
@@ -36,6 +36,8 @@ void setup(){
   w2 = width/2;
   h2 = height/2;
   d2 = dist(0, 0, w2, h2);
+
+  occupied = new ArrayList<PVector>();
   
   noStroke();
   font = createFont("Montserrat-regular",250);
@@ -56,8 +58,7 @@ void draw(){
   if(leap.getHands().size()>0)
   {
     handDetected=true;
-    println("Hand detected.");
-
+    
     handDetectedAt=millis();
     handPosition = leap.getHands().get(0).getPosition();
   
@@ -85,8 +86,7 @@ void draw(){
     star newStar = new star();
     
     starArray.add(newStar);
-    i++;
-    
+    i++;    
   }  
           
   //Moves and renders the new stars
@@ -94,31 +94,54 @@ void draw(){
     star s = starArray.get(j);
     
     removeOutOfFrame(j);
-    
-    if(s.state!="stay")
+
+    if(occupied.size()>0.75*points.size())
     {
-      if(insideLetter(s.x,s.y))
+      println("Time to glow");
+      if(s.state=="stay-glow")
       {
-        s.state="stay";
-      }      
-    }
-        
-    if(handDetected)
-    {      
-      if(s.state!="stay")
-      {
-        s.state="move";
+        //keep the state the same
       }
+      else if(s.state=="stay")
+      {
+        s.state="stay_glow";
+      }
+      else
+      {
+        s.state="float";
+      }
+
     }
     else
     {
-      if(millis() > handDetectedAt + intervalGap)
+      if(s.state!="stay")
       {
-        s.state="float";        
-      }  
-    }
-    
+        if(insideLetter(s))
+        {
+          s.state="stay";
+          occupied.add(new PVector(s.x,s.y));
+          // removeNotOccupied(j);
+        }      
+      }
 
+      if(handDetected)
+      {      
+        if(s.state!="stay")
+        {
+          s.state="move";
+        }
+      }
+      else
+      {
+        if(millis() > handDetectedAt + intervalGap)
+        {
+          s.state="float";
+          notOccupied=points;        
+        }  
+      }
+      
+    } 
+    
     // println("Total number of stars is: "+starArray.size());
       
     s.move();//move the star
@@ -172,48 +195,58 @@ void createLetter(){
   
   notOccupied = points;
   
-  println("The size of points is "+points.size());
+  // println("The size of points is "+points.size());
 }
 
 void removeExtraStars(){
   //Removes extra stars
   if (starArray.size()>numberOfStars) {
     //keeps the total number of stars constant    
-    int extraStars=starArray.size()-numberOfStars;
+    int extraStars=starArray.size() - numberOfStars;
     int i=0,j=0;
     
-    while(i<extraStars)
+    // println("Removing stars because # of stars is "+starArray.size());
+    
+    while(i<extraStars+1)
     {
       star s = starArray.get(j);
       
       if(s.state!="stay" && s.state!="stay_glow")
       {
-         i++;
-         starArray.remove(j);
+        i++;
+        starArray.remove(j);
       } 
       else
-         j++;
+      {
+        j++;
+      }           
     }        
   }
 }
 
-boolean insideLetter(float x, float y){
+void removeNotOccupied(int i){
+
+  if(i>2 && i<(notOccupied.size()-10))
+  {
+    for(int j=i-2;j<i+3;j++) //Remove 5 pixels neighboring and including i
+      notOccupied.remove(i);          
+  }
+
+  println("Number of points that are not occupied are: "+notOccupied.size());
+}
+
+boolean insideLetter(star s){
+  float sX = s.x;
+  float sY = s.y;
 
   for(int i=0;i<notOccupied.size();i++)
   {
-    int px=int(notOccupied.get(i).x);
-    int py=int(notOccupied.get(i).y);
+    float pX = notOccupied.get(i).x;
+    float pY = notOccupied.get(i).y;
     
-    if(abs(x-px)<1 && abs(y-py)<1)
-    {
-        
-        // if(i>2 && i<(notOccupied.size()-10))
-        // {
-        //   for(int j=i-2;j<i+3;j++) //Remove 5 pixels neighboring and including i
-        //     notOccupied.remove(i);          
-        // }
-        // println("Number of points that are not occupied are: "+notOccupied.size());
-        return true;        
+    if(abs(sX-pX)<1 && abs(sY-pY)<1)
+    {  
+      return true;        
     }
   }
   return false;
