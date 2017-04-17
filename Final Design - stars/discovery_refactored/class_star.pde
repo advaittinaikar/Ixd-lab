@@ -72,35 +72,13 @@ class star {
     }
     else if(state=="move")
     {
-      x = x - map(hand_x, 0, width, -0.05*speed, 0.05*speed)*(w2-x);
-      y = y - map(hand_y, 0, height, -0.05*speed, 0.05*speed)*(h2-y);
+      x = x - map(handX, 0, width, -0.05*speed, 0.05*speed)*(w2-x);
+      y = y - map(handY, 0, height, -0.05*speed, 0.05*speed)*(h2-y);
     }
     else
     {
       
     }
-        
-    //if(inLetter && !disperse){}
-    //else if(inLetter && disperse)
-    //{
-    //  x =x-map(width/2+5, 0, width, -0.05*speed, 0.05*speed)*(w2-x); 
-    //  y =y-map(height/2-5, 0, height, -0.05*speed, 0.05*speed)*(h2-y);  
-    //}
-    //else if(!hand_detected)
-    //{
-    //  x =x-map(width/2+5, 0, width, -0.05*speed*2, 0.05*speed*2)*(w2-x); 
-    //  y =y-map(height/2-5, 0, height, -0.05*speed*2, 0.05*speed*2)*(h2-y);  
-    //}
-    //else if(hand_detected && !insideLetter(x,y))
-    //{
-    //  x =x-map(hand_x, 0, width, -0.05*speed, 0.05*speed)*(w2-x); 
-    //  y =y-map(hand_y, 0, height, -0.05*speed, 0.05*speed)*(h2-y);  
-    //}
-    //else
-    //{         
-    //   inLetter=true;
-    //   starsInLetter.add(this);
-    //   //println("Number of stars in letter is: "+starsInLetter.size());
-    //}    
+           
   }
 }

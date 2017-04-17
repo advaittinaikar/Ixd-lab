@@ -1,7 +1,7 @@
 import de.voidplus.leapmotion.*;
 LeapMotion leap;
 
-int time_duration = 15000;
+int intervalGap = 10000;
 
 ArrayList<PVector> points,notOccupied,Occupied;
 PGraphics letter;
@@ -10,7 +10,7 @@ PImage p;
 float s=400,max=0;
 boolean endOfStory=false;
 boolean disperse=true;
-int time_now=0;
+int handDetectedAt=0;
 int threshold=35660;
 
 star newStar;
@@ -26,8 +26,8 @@ int defaultY = height/2-10;
 
 PVector handPosition;
 Hand hand;
-float hand_x,hand_y;
-boolean hand_detected=false;
+float handX,handY;
+boolean handDetected=false;
 
 void setup(){
   
@@ -55,27 +55,27 @@ void draw(){
    
   if(leap.getHands().size()>0)
   {
-    time_now=millis();
+    handDetectedAt=millis();
     handPosition = leap.getHands().get(0).getPosition();
   
-    hand_x = map(handPosition.x,0,1000,0,width);
-    hand_y = map(handPosition.y,100,500,0,height);
+    handX = map(handPosition.x,0,1000,0,width);
+    handY = map(handPosition.y,100,500,0,height);
     
-    hand_detected=true;
+    handDetected=true;
     // disperse=false;
   }
   else
   {
-    hand_detected=false;
+    handDetected=false;
   }
   
-  // if(millis() < time_now + time_duration)
+  // if(millis() < handDetectedAt + intervalGap)
   //   disperse=false;
   // else
   //   disperse=true;    
   
-  if(hand_detected)
-    fill(0, map(dist(hand_x, hand_y, w2, h2), 0, d2, 255, -10)); // Mapping distance of cursor from center to 255,-10. The opacity is the mapped distance
+  if(handDetected)
+    fill(0, map(dist(handX, handY, w2, h2), 0, d2, 255, -10)); // Mapping distance of cursor from center to 255,-10. The opacity is the mapped distance
   else
     fill(0);
     
@@ -88,20 +88,10 @@ void draw(){
   while(i<newStars)
   {
     star newStar = new star();
-    // if(hand_detected)
-    // {
-    //   if(!insideLetter(newStar.x,newStar.y)) //if the new star isn't inside the letter then add it t visible stars
-    //   {
-    //     println("Adding stars");
-    //     starArray.add(newStar);
-    //     i++;
-    //   } 
-    // }
-    // else
-    // {
-      starArray.add(newStar);
-      i++;
-    // }
+    
+    starArray.add(newStar);
+    i++;
+    
   }
   
   //if(notOccupied.size()<35660)
@@ -113,9 +103,8 @@ void draw(){
     
     removeOutOfFrame(j);
 
-    if(hand_detected)
-    {
-      
+    if(handDetected)
+    {      
       if(insideLetter(s.x,s.y))
       {
         s.state = "stay";
@@ -127,61 +116,11 @@ void draw(){
     }
     else
     {
-      if(millis() > time_now + time_duration)
+      if(millis() > handDetectedAt + intervalGap)
       {
         s.state="float";        
       }  
     }
-      
-    // if(millis() > time_now + time_duration)
-    // {
-    //    s.state="float"; 
-    // }
-    // else if(insideLetter(s.x,s.y))
-    // {
-    //   if(notOccupied.size() < threshold)
-    //   {
-    //     s.state="stay_glow";
-    //   }
-    //   else
-    //   {
-    //     s.state="stay";
-    //   }
-    // }
-    // else
-    // {
-    //   if(hand_detected)
-    //   {
-    //     s.state="move";
-    //   }
-    //   else
-    //   {
-    //     s.state="float";
-    //   }      
-    // }
-        
-    //if(s.state!="stay")
-    //{
-    //  if(hand_detected)
-    //  {
-    //    s.state="move";
-    //  }
-    //  else
-    //  {
-    //    s.state="float";
-    //  }        
-    //}
-    //else
-    //{
-    //  if(!hand_detected && (millis() > time_now + time_duration))
-    //  {
-    //    s.state="float";
-    //  }
-    //  else if(notOccupied.size() < threshold)
-    //  {
-    //    s.state="stay_glow";
-    //  }
-    //}
     
     if(s.state!="float") 
       println("State of this star is: "+s.state);
@@ -265,6 +204,7 @@ void removeExtraStars(){
 }
 
 boolean insideLetter(float x, float y){
+
   for(int i=0;i<notOccupied.size();i++)
   {
     int px=int(notOccupied.get(i).x);
@@ -272,6 +212,7 @@ boolean insideLetter(float x, float y){
     
     if(abs(x-px)<1 && abs(y-py)<1)
     {
+        if
         // if(i>2 && i<(notOccupied.size()-10))
         // {
         //   for(int j=i-2;j<i+3;j++) //Remove 5 pixels neighboring and including i
