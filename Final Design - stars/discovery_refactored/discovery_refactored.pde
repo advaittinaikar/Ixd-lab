@@ -16,7 +16,7 @@ int threshold=35660;
 star newStar;
 ArrayList<star> starArray = new ArrayList<star>();
 float h2,w2,d2;//=height/2,weight/2,diagonal/2
-int numberOfStars = 5000;
+int numberOfStars = 7500;
 int newStars = 50;
 PFont font;
 ArrayList<star> starsInLetter = new ArrayList<star>();
@@ -55,25 +55,20 @@ void draw(){
    
   if(leap.getHands().size()>0)
   {
+    handDetected=true;
+    println("Hand detected.");
+
     handDetectedAt=millis();
     handPosition = leap.getHands().get(0).getPosition();
   
     handX = map(handPosition.x,0,1000,0,width);
     handY = map(handPosition.y,100,500,0,height);
-    
-    handDetected=true;
-    // disperse=false;
   }
   else
   {
     handDetected=false;
   }
-  
-  // if(millis() < handDetectedAt + intervalGap)
-  //   disperse=false;
-  // else
-  //   disperse=true;    
-  
+      
   if(handDetected)
     fill(0, map(dist(handX, handY, w2, h2), 0, d2, 255, -10)); // Mapping distance of cursor from center to 255,-10. The opacity is the mapped distance
   else
@@ -92,26 +87,27 @@ void draw(){
     starArray.add(newStar);
     i++;
     
-  }
-  
-  //if(notOccupied.size()<35660)
-  //  endOfStory=true;
+  }  
           
   //Moves and renders the new stars
   for (int j = 0; j<starArray.size(); j++) {
     star s = starArray.get(j);
     
     removeOutOfFrame(j);
-
-    if(handDetected)
-    {      
+    
+    if(s.state!="stay")
+    {
       if(insideLetter(s.x,s.y))
       {
-        s.state = "stay";
-      }
-      else
+        s.state="stay";
+      }      
+    }
+        
+    if(handDetected)
+    {      
+      if(s.state!="stay")
       {
-        s.state = "move";
+        s.state="move";
       }
     }
     else
@@ -122,8 +118,6 @@ void draw(){
       }  
     }
     
-    if(s.state!="float") 
-      println("State of this star is: "+s.state);
 
     // println("Total number of stars is: "+starArray.size());
       
@@ -165,8 +159,8 @@ void createLetter(){
   p=letter;//assigns the image to the graphics
   p.loadPixels(); //loads the image
   
-  for(int x=0;x<p.width;x++){//this loop converts all pixels of the image into vectors
-    for(int y=0;y<p.height;y++){
+  for(int x=0;x<p.width;x=x+2){//this loop converts all pixels of the image into vectors
+    for(int y=0;y<p.height;y=y+2){
       
       int index=x+y*p.width;
       color c1=p.pixels[index];
@@ -192,7 +186,7 @@ void removeExtraStars(){
     {
       star s = starArray.get(j);
       
-      if(s.state!="stay" || s.state!="stay_glow")
+      if(s.state!="stay" && s.state!="stay_glow")
       {
          i++;
          starArray.remove(j);
@@ -212,7 +206,7 @@ boolean insideLetter(float x, float y){
     
     if(abs(x-px)<1 && abs(y-py)<1)
     {
-        if
+        
         // if(i>2 && i<(notOccupied.size()-10))
         // {
         //   for(int j=i-2;j<i+3;j++) //Remove 5 pixels neighboring and including i
