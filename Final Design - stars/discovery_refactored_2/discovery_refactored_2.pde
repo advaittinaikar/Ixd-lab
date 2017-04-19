@@ -1,7 +1,7 @@
 import de.voidplus.leapmotion.*;
 LeapMotion leap;
 
-int intervalGap = 10000;
+int intervalGap = 8000;
 
 ArrayList<PVector> points,notOccupied,occupied;
 PGraphics letter;
@@ -11,12 +11,13 @@ float s=400,max=0;
 boolean endOfStory=false;
 boolean disperse=true;
 int handDetectedAt=0;
-int threshold=35660;
+int threshold=0;
+int pointsSize=0;
 
 star newStar;
 ArrayList<star> starArray = new ArrayList<star>();
 float h2,w2,d2;//=height/2,weight/2,diagonal/2
-int numberOfStars = 7500;
+int numberOfStars = 10000;
 int newStars = 50;
 PFont font;
 ArrayList<star> starsInLetter = new ArrayList<star>();
@@ -95,38 +96,35 @@ void draw(){
     
     removeOutOfFrame(j);
 
-    if(occupied.size()>0.75*points.size())
+    if(notOccupied.size()<threshold)
     {
-      println("Time to glow");
-      if(s.state=="stay-glow")
-      {
-        //keep the state the same
-      }
-      else if(s.state=="stay")
+      if(s.state=="stay" || s.state=="stay_glow")
       {
         s.state="stay_glow";
       }
-      else
-      {
+      else{
         s.state="float";
       }
-
+      
     }
     else
     {
-      if(s.state!="stay")
+      if(s.state=="move")
       {
-        if(insideLetter(s))
+        int pointToBeRemoved = insideLetter(s);
+        
+        if(pointToBeRemoved>=0)
         {
+          println("Point to be removed is: "+pointToBeRemoved);
           s.state="stay";
-          occupied.add(new PVector(s.x,s.y));
-          // removeNotOccupied(j);
+          // occupied.add(new PVector(s.x,s.y));
+          removeNotOccupied(pointToBeRemoved);
         }      
       }
 
       if(handDetected)
       {      
-        if(s.state!="stay")
+        if(s.state=="float")
         {
           s.state="move";
         }
@@ -136,10 +134,20 @@ void draw(){
         if(millis() > handDetectedAt + intervalGap)
         {
           s.state="float";
-          notOccupied=points;        
+          // println("Time to disperse.");
+          
+          if(notOccupied.size()<0.9*pointsSize)
+          {
+            createLetter();
+          }
         }  
       }
-      
+
+      // if(notOccupied.size()<threshold && s.state=="stay")
+      // {
+      //  println("Time to glow");
+      //  s.state="stay-glow";
+      // }      
     } 
     
     // println("Total number of stars is: "+starArray.size());
@@ -165,7 +173,7 @@ void lightUpLetters(){
 }
 
 void createLetter(){
-  
+  println("Creating letter...");
   letter.beginDraw();
   letter.noStroke();
   letter.background(0);
@@ -194,6 +202,8 @@ void createLetter(){
   }
   
   notOccupied = points;
+  pointsSize = points.size();
+  threshold = pointsSize/2;
   
   // println("The size of points is "+points.size());
 }
@@ -226,16 +236,17 @@ void removeExtraStars(){
 
 void removeNotOccupied(int i){
 
-  if(i>2 && i<(notOccupied.size()-10))
-  {
-    for(int j=i-2;j<i+3;j++) //Remove 5 pixels neighboring and including i
+  // if(i>2 && i<(notOccupied.size()-10))
+  // {
+  //   for(int j=i-1;j<i+2;j++) //Remove 3 pixels neighboring and including i
       notOccupied.remove(i);          
-  }
+  // }
 
   println("Number of points that are not occupied are: "+notOccupied.size());
+  println("Total number of points is: "+points.size());
 }
 
-boolean insideLetter(star s){
+int insideLetter(star s) {
   float sX = s.x;
   float sY = s.y;
 
@@ -246,10 +257,11 @@ boolean insideLetter(star s){
     
     if(abs(sX-pX)<1 && abs(sY-pY)<1)
     {  
-      return true;        
+      return i;        
     }
   }
-  return false;
+
+  return -1;
 }
 
 boolean occupied (PVector p) {
