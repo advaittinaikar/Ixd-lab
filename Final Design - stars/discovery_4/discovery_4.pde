@@ -1,7 +1,14 @@
+import netP5.*;
+import oscP5.*;
+
 import de.voidplus.leapmotion.*;
+
 LeapMotion leap;
 
 int intervalGap = 8000;
+
+OscP5 oscP5;
+NetAddress myRemoteLocation;
 
 ArrayList<PVector> points,notOccupied,occupied;
 PGraphics letter;
@@ -29,6 +36,7 @@ PVector handPosition;
 Hand hand;
 float handX,handY;
 boolean handDetected=false;
+boolean firstDetection=true;
 
 void setup(){
   
@@ -37,6 +45,9 @@ void setup(){
   w2 = width/2;
   h2 = height/2;
   d2 = dist(0, 0, w2, h2);
+  
+  oscP5 = new OscP5(this,9000);
+  myRemoteLocation = new NetAddress("128.237.178.108",3000);
 
   occupied = new ArrayList<PVector>();
   
@@ -57,7 +68,7 @@ void setup(){
 void draw(){
    
   if(leap.getHands().size()>0)
-  {
+  {  
     handDetected=true;
     
     handDetectedAt=millis();
@@ -65,6 +76,12 @@ void draw(){
   
     handX = map(handPosition.x,0,1000,0,width);
     handY = map(handPosition.y,100,500,0,height);
+    
+    OscMessage leapMessage = new OscMessage("/leappatterns");
+    leapMessage.add(handX);
+    leapMessage.add(handY);
+    
+    oscP5.send(leapMessage, myRemoteLocation);
   }
   else
   {
@@ -96,59 +113,78 @@ void draw(){
     
     removeOutOfFrame(j);
 
-    if(notOccupied.size()<threshold)
-    {
-      if(s.state=="stay" || s.state=="stay_glow")
-      {
-        s.state="stay_glow";
-      }
-      else{
-        s.state="float";
-      }
-      
-    }
-    else
-    {
-      if(s.state=="move")
-      {
-        int pointToBeRemoved = insideLetter(s);
-        
-        if(pointToBeRemoved>=0)
-        {
-          println("Point to be removed is: "+pointToBeRemoved);
-          s.state="stay";
-          // occupied.add(new PVector(s.x,s.y));
-          removeNotOccupied(pointToBeRemoved);
-        }      
-      }
-
-      if(handDetected)
-      {      
-        if(s.state=="float")
-        {
-          s.state="move";
-        }
-      }
-      else
-      {
-        if(millis() > handDetectedAt + intervalGap)
-        {
-          s.state="float";
-          // println("Time to disperse.");
-          
-          if(notOccupied.size()<0.9*pointsSize)
-          {
-            createLetter();
-          }
-        }  
-      }
-
-      // if(notOccupied.size()<threshold && s.state=="stay")
-      // {
-      //  println("Time to glow");
-      //  s.state="stay-glow";
-      // }      
-    } 
+  if(firstDetection && handDetected)
+  {
+    s.state="initial_sequence";
+    firstDetection=false;
+    delay(1000);
+  }
+  else
+  {
+    if(notOccupied.size() < threshold)
+         {
+           if((millis() > handDetectedAt + 2*intervalGap) && s.state=="stay_glow")
+           {
+             s.state="float";
+             createLetter();
+             numberOfStars=10000;
+             firstDetection=true;
+           }
+           else
+           {        
+             if(s.state=="stay" || s.state=="stay_glow")
+             {
+               s.state="stay_glow";
+             }
+             else
+             {
+               s.state="float";
+             }
+   
+             if(j<notOccupied.size()/2)
+             {
+               fillUpLetter(j*2);
+             }
+                     
+           }  
+         }
+         else
+         {
+           if(s.state=="move")
+           {
+             int pointToBeRemoved = insideLetter(s);
+             
+             if(pointToBeRemoved>=0)
+             {
+               //println("Point to be removed is: "+pointToBeRemoved);
+               s.state="stay";
+               // occupied.add(new PVector(s.x,s.y));
+               removeNotOccupied(pointToBeRemoved);
+             }      
+           }
+   
+           if(handDetected)
+           {      
+             if(s.state=="float")
+             {
+               s.state="move";
+             }
+           }
+           else
+           {
+             if(millis() > handDetectedAt + intervalGap)
+             {
+               s.state="float";
+               firstDetection=true;
+               
+               if(notOccupied.size()<0.9*pointsSize)
+               {
+                 createLetter();
+               }
+             }  
+           }     
+         }
+       } 
     
     // println("Total number of stars is: "+starArray.size());
       
@@ -164,12 +200,39 @@ void removeOutOfFrame(int i){
     starArray.remove(i); //remove the star if it is out of the frame
 }
 
+void doInitialSequence(){
+
+}
+
 void lightUpLetters(){
   for(PVector v : points)
   {
     fill(255,255,0);
     ellipse(v.x,v.y,1,1);
   }
+}
+
+void oscEvent(OscMessage oscM)
+{
+  if(oscM.checkAddrPattern("/leappatterns"))
+  {
+    println("OscMessage received");
+    float firstValue = oscM.get(0).floatValue();
+    float secondValue = oscM.get(1).floatValue();
+    println("The Hand values are: "+firstValue+", "+secondValue);
+  }
+}
+
+void fillUpLetter(int index){
+
+  //println("Filling up letter.");
+
+  star s=new star();
+  s.state="stay_glow";
+  s.x=notOccupied.get(index).x;
+  s.y=notOccupied.get(index).y;
+
+  numberOfStars++;    
 }
 
 void createLetter(){
@@ -242,8 +305,8 @@ void removeNotOccupied(int i){
       notOccupied.remove(i);          
   // }
 
-  println("Number of points that are not occupied are: "+notOccupied.size());
-  println("Total number of points is: "+points.size());
+  //println("Number of points that are not occupied are: "+notOccupied.size());
+  //println("Total number of points is: "+points.size());
 }
 
 int insideLetter(star s) {

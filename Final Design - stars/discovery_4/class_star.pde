@@ -74,6 +74,11 @@ class star {
       x = x - map(handX, 0, width, -0.05*speed, 0.05*speed)*(w2-x);
       y = y - map(handY, 0, height, -0.05*speed, 0.05*speed)*(h2-y);
     }
+    else if(state=="initial_sequence")
+    {
+      x = x - map(width, 0, width, -0.05*speed, 0.05*speed)*(w2-x);
+      y = y - map(height, 0, height, -0.05*speed, 0.05*speed)*(h2-y);
+    }
     else
     {
       
