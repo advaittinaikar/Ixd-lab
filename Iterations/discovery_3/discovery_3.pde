@@ -117,7 +117,7 @@ void draw(){
   {
     s.state="initial_sequence";
     firstDetection=false;
-    delay(1000);
+    // delay(1000);
   }
   else
   {

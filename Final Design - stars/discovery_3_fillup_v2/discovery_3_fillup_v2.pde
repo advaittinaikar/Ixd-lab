@@ -7,9 +7,6 @@ LeapMotion leap;
 
 int intervalGap = 8000;
 
-float leapXmax = 1000;
-float leapYmax = 500;
-
 // OscP5 oscP5;
 // NetAddress myRemoteLocation;
 
@@ -20,13 +17,10 @@ PImage p;
 float s=400,max=0;
 boolean endOfStory=false;
 boolean disperse=true;
-int handsDetectedAt=0;
+int handDetectedAt=0;
 int glowStartedAt=0;
 int threshold=0;
 int pointsSize=0;
-
-int prevHandNum=0;
-float textWidth=0;
 
 star newStar;
 ArrayList<star> starArray = new ArrayList<star>();
@@ -39,17 +33,16 @@ ArrayList<star> starsInLetter = new ArrayList<star>();
 int defaultX = width/2+5;
 int defaultY = height/2-10;
 
-PVector handPosition1,handPosition2;
+PVector handPosition;
 Hand hand;
-float hand1X,hand1Y,hand2X,hand2Y;
-float handDiffX, handDiffY;
+float handX,handY;
 boolean handDetected=false;
 boolean firstDetection=true;
 boolean glowing=false;
 
 void setup(){
   
-  size(1300, 800,P2D);
+  size(1400, 900,P2D);
   
   w2 = width/2;
   h2 = height/2;
@@ -75,48 +68,22 @@ void setup(){
 }
 
 void draw(){
-  
-   int[50] handNumArray;
-  // hand1X=0;
-  // hand1Y=0;
-  // hand2X=0;
-  // hand2Y=0;
-
-   for(int i=0;i<50;i++) //Sampling value to reduce variation
-   {
-     handNumArray[i] = leap.getHands().size();
-   }
-  
-   int handNum = checkHandNum(handNumArray); 
-   // handNum = handNum/50;
-
-   println("Hand num is: "+handNum);
-
-  //int handNum = leap.getHands().size();
-
-  if(handNum==2)
-  {
+   
+  if(leap.getHands().size()>0)
+  {  
     handDetected=true;
     
-    handsDetectedAt=millis();  
-
-    Hand hand1 = leap.getHands().get(0);
-    Hand hand2 = leap.getHands().get(1);
+    handDetectedAt=millis();
+    handPosition = leap.getHands().get(0).getPosition();
+  
+    handX = map(handPosition.x,0,1000,0,width);
+    handY = map(handPosition.y,100,500,0,height);
     
-    float hx1 = getSmoothXValue(hand1);
-    float hy1 = getSmoothYValue(hand1);
+    // OscMessage leapMessage = new OscMessage("/leappatterns");
+    // leapMessage.add(handX);
+    // leapMessage.add(handY);
     
-    float hx2 = getSmoothXValue(hand2);
-    float hy2 = getSmoothYValue(hand2);
-    
-    handDiffX = abs(hx2-hx1);
-    handDiffY = abs(hy2-hy1);
-    
-    handDiffX = abs(map(handDiffX,200,width,0,width));
-    handDiffY = abs(map(handDiffY,20,600,0,height));
-    
-    //println("The difference between hand x positions is:"+handDiffX);
-    //println("The difference between hand y positions is:"+handDiffY);    
+    // oscP5.send(leapMessage, myRemoteLocation);
   }
   else
   {
@@ -124,7 +91,7 @@ void draw(){
   }
       
   if(handDetected)
-    fill(0, map(dist(handDiffX, handDiffY, w2, h2), 0, d2, 255, -10)); // Mapping distance of cursor from center to 255,-10. The opacity is the mapped distance
+    fill(0, map(dist(handX, handY, w2, h2), 0, d2, 255, -10)); // Mapping distance of cursor from center to 255,-10. The opacity is the mapped distance
   else
     fill(0);
     
@@ -139,8 +106,8 @@ void draw(){
     star newStar = new star();
     
     starArray.add(newStar);
-    i++;
-  }
+    i++;    
+  }  
           
   //Moves and renders the new stars
   for (int j = 0; j<starArray.size(); j++) {
@@ -157,19 +124,19 @@ void draw(){
   else
   {
     if(notOccupied.size() < threshold)
-    {  
+     {  
        if(!glowing)
        {
         glowing=true;
         glowStartedAt=millis();
        }
 
-       if((millis() > glowStartedAt + intervalGap) && s.state=="stay_glow")
+       if((millis() > handDetectedAt + intervalGap) && s.state=="stay_glow")
        {
+         numberOfStars=10000;
          s.state="float";
-         glowing=false;
          createLetter();
-         // numberOfStars=10000;
+         numberOfStars=10000;
          firstDetection=true;
        }
        else
@@ -183,15 +150,15 @@ void draw(){
            s.state="float";
          }
 
-         // if((starArray.size()<13000) && (j<notOccupied.size()/2))
-         // {
-         //   fillUpLetter(j*2);
-         // }
+         if((starArray.size()<13000) && (j<notOccupied.size()/2))
+         {
+           fillUpLetter(j*2);
+         }
                  
        }  
-    }
-    else
-    {
+     }
+     else
+     {
        if(s.state=="move")
        {
          int pointToBeRemoved = insideLetter(s);
@@ -214,47 +181,27 @@ void draw(){
        }
        else
        {
-         if(millis() > handsDetectedAt + intervalGap)
+         if(millis() > handDetectedAt + intervalGap)
          {
            s.state="float";
            firstDetection=true;
            
-            if(notOccupied.size()<0.9*pointsSize)
-            {
+           if(notOccupied.size()<0.9*pointsSize)
+           {
              createLetter();
-            }
-          }  
-        }     
-      }
-    } 
+           }
+         }  
+       }     
+     }
+       } 
     
     // println("Total number of stars is: "+starArray.size());
       
     s.move();//move the star
     s.render(); //show the star after movement
-
-    if(handNum==1 && prevHandNum==1 && !glowing)
-    {
-      fill(200);
-      // PFont font = createFont("Montserrat-regular",250);
-      // textFont(font);
-      textSize(20);
-      // textAlign(CENTER,CENTER);
-      text("Please place both hands inside.",w2-200,h2);
-    }
   }
   
   removeExtraStars();
-
-  prevHandNum = handNum;
-}
-
-int checkHandNum(int[] handNumArray)
-{
-  for(int i=0;i<handNumArray.length;i++)
-  {
-    handNumArray
-  }
 }
 
 void removeOutOfFrame(int i){
@@ -263,6 +210,7 @@ void removeOutOfFrame(int i){
 }
 
 void doInitialSequence(){
+
 }
 
 void lightUpLetters(){
@@ -273,7 +221,8 @@ void lightUpLetters(){
   }
 }
 
-void oscEvent(OscMessage oscM){
+void oscEvent(OscMessage oscM)
+{
   if(oscM.checkAddrPattern("/leappatterns"))
   {
     println("OscMessage received");
@@ -305,10 +254,10 @@ void createLetter(){
   letter.textLeading((letter.textAscent()+letter.textDescent()));
   letter.textFont(font);
   letter.textAlign(CENTER,CENTER);
-  letter.text(message, w2, height*.45);
+  letter.text(message, width/2, height*.45);
   letter.endDraw();
   letter.loadPixels();
-  
+ 
   points = new ArrayList(); //creates a new arraylist of vectors....refreshing page
   p=letter;//assigns the image to the graphics
   p.loadPixels(); //loads the image
@@ -387,36 +336,4 @@ boolean occupied (PVector p) {
     
   }
   return true;
-}
-
-float getSmoothXValue(Hand hand)
-{
-  float hx=0;
-  for(int i=0;i<10;i++)
-  {
-    PVector h = hand.getPosition();
-    float handX = constrain(h.x,0,width);
-    handX = map(handX,0,leapXmax,0,width);
-    
-    hx+=handX;
-  }
-  
-  //println("Average value of x: "+hx/6);
-  return hx/10;
-}
-
-float getSmoothYValue(Hand hand)
-{
-  float hy=0;
-  for(int i=0;i<10;i++)
-  {
-    PVector h = hand.getPosition();
-    float handY = constrain(h.y,0,height);
-    handY = map(handY,0,leapYmax,0,height);
-    
-    hy+=handY;
-  }
-  
-  //println("Average value of y: "+hy/6);
-  return hy/10;
 }

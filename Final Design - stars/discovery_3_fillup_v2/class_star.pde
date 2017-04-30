@@ -54,7 +54,7 @@ class star {
        fill(alpha);
        ellipse(x, y, d*(map(noise(x, y,0.001*frameCount),0,1,0.2,2)), d*(map(noise(x, y,0.001*frameCount),0,1,0.2,2)));
        //filter(BLUR,alpha);
-       // println("Blurring..");
+       println("Blurring..");
      }
      else
      {
@@ -67,8 +67,8 @@ class star {
   
   //Moves the star based on conditions
   void move() {
-    float hX=handDiffX;
-    float hY=handDiffY;
+    float hX=handX;
+    float hY=handY;
     
     if(hX>w2)  hX=width-hX;
     if(hY>h2)  hY=height-hY;
@@ -80,8 +80,8 @@ class star {
     }
     else if(state=="move")
     {
-      x =x-map(handDiffX, 0, width, -0.05*speed, 0.05*speed)*(w2-x); 
-      y =y-map(handDiffY, 0, height, -0.05*speed, 0.05*speed)*(h2-y);
+      x = x - map(hX, 0, width/2, -0.05*speed, 0.05*speed)*(w2-x);
+      y = y - map(hY, 0, height/2, -0.05*speed, 0.05*speed)*(h2-y);
     }
     else if(state=="initial_sequence")
     {

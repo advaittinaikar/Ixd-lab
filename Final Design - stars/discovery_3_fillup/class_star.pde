@@ -21,7 +21,7 @@ class star {
       
       c = color(random(250),random(250),random(250));
       
-      speed = random(0.2, 2); //assigning the star a random speed
+      speed = random(0.2, 5); //assigning the star a random speed
       wachsen = int(random(0, 2)); //wachsen means to grow
       if(wachsen == 1)d = 0;
       else {
@@ -50,28 +50,19 @@ class star {
      
      if(state=="stay_glow")
      {
-       float alpha=100*sin(float(millis()-glowStartedAt)/2000*PI)+155;
-       fill(alpha);
-       ellipse(x, y, d*(map(noise(x, y,0.001*frameCount),0,1,0.2,2)), d*(map(noise(x, y,0.001*frameCount),0,1,0.2,2)));
-       //filter(BLUR,alpha);
-       // println("Blurring..");
+       float alpha=55*sin(float(millis()-glowStartedAt)/2000*PI)+200;
+       fill(alpha);       
      }
      else
      {
        fill(c);
-       ellipse(x, y, d*(map(noise(x, y,0.001*frameCount),0,1,0.2,2)), d*(map(noise(x, y,0.001*frameCount),0,1,0.2,2)));
-       //filter(BLUR,0);
      }
-          
+      
+    ellipse(x, y, d*(map(noise(x, y,0.001*frameCount),0,1,0.2,2)), d*(map(noise(x, y,0.001*frameCount),0,1,0.2,2)));    
   }
   
   //Moves the star based on conditions
   void move() {
-    float hX=handDiffX;
-    float hY=handDiffY;
-    
-    if(hX>w2)  hX=width-hX;
-    if(hY>h2)  hY=height-hY;
     
     if(state=="float" || state=="disperse")
     {
@@ -80,8 +71,8 @@ class star {
     }
     else if(state=="move")
     {
-      x =x-map(handDiffX, 0, width, -0.05*speed, 0.05*speed)*(w2-x); 
-      y =y-map(handDiffY, 0, height, -0.05*speed, 0.05*speed)*(h2-y);
+      x = x - map(handX, 0, width, -0.05*speed, 0.05*speed)*(w2-x);
+      y = y - map(handY, 0, height, -0.05*speed, 0.05*speed)*(h2-y);
     }
     else if(state=="initial_sequence")
     {
