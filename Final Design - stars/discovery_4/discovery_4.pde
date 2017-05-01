@@ -5,7 +5,7 @@ import de.voidplus.leapmotion.*;
 
 LeapMotion leap;
 
-int intervalGap = 8000;
+int intervalGap = 5000;
 
 float leapXmax = 1000;
 float leapYmax = 500;
@@ -25,7 +25,7 @@ int glowStartedAt=0;
 int threshold=0;
 int pointsSize=0;
 
-int prevHandNum=0;
+float prevHandNum=0;
 float textWidth=0;
 
 star newStar;
@@ -76,25 +76,20 @@ void setup(){
 
 void draw(){
   
-   int[50] handNumArray;
-  // hand1X=0;
-  // hand1Y=0;
-  // hand2X=0;
-  // hand2Y=0;
+   float handNum=0;
 
-   for(int i=0;i<50;i++) //Sampling value to reduce variation
+   for(int i=0;i<10;i++) //Sampling value to reduce variation
    {
-     handNumArray[i] = leap.getHands().size();
+     handNum += float(leap.getHands().size());
    }
-  
-   int handNum = checkHandNum(handNumArray); 
-   // handNum = handNum/50;
+   println("Hand num sum is:"+handNum);
+   handNum = handNum/10.0;
 
    println("Hand num is: "+handNum);
 
   //int handNum = leap.getHands().size();
 
-  if(handNum==2)
+  if(handNum>1)
   {
     handDetected=true;
     
@@ -152,7 +147,6 @@ void draw(){
   {
     s.state="initial_sequence";
     firstDetection=false;
-    // delay(1000);
   }
   else
   {
@@ -235,12 +229,11 @@ void draw(){
 
     if(handNum==1 && prevHandNum==1 && !glowing)
     {
+      String handsInside = "Please place both hands over the table.";
+      float t=textWidth(handsInside);
       fill(200);
-      // PFont font = createFont("Montserrat-regular",250);
-      // textFont(font);
       textSize(20);
-      // textAlign(CENTER,CENTER);
-      text("Please place both hands inside.",w2-200,h2);
+      text(handsInside,w2-t/2,h2);
     }
   }
   
@@ -249,13 +242,13 @@ void draw(){
   prevHandNum = handNum;
 }
 
-int checkHandNum(int[] handNumArray)
-{
-  for(int i=0;i<handNumArray.length;i++)
-  {
-    handNumArray
-  }
-}
+//int checkHandNum(int[] handNumArray)
+//{
+//   for(int i=0;i<handNumArray.length;i++)
+//   {
+//     handNumArray
+//   }
+//}
 
 void removeOutOfFrame(int i){
   if (starArray.get(i).x<0||starArray.get(i).x>width||starArray.get(i).y<0||starArray.get(i).y>height) 
