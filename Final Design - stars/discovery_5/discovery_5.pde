@@ -5,7 +5,7 @@ import de.voidplus.leapmotion.*;
 
 LeapMotion leap;
 
-int intervalGap = 7000;
+int intervalGap = 5000;
 
 float leapXmax = 1000;
 float leapYmax = 500;
@@ -49,8 +49,7 @@ boolean glowing=false;
 
 void setup(){
   
-  size(1400, 750,P2D);
-  //size(2000,1100,P2D);
+  size(1300, 800,P2D);
   
   w2 = width/2;
   h2 = height/2;
@@ -79,12 +78,12 @@ void draw(){
   
    float handNum=0;
 
-   for(int i=0;i<5;i++) //Sampling value to reduce variation
+   for(int i=0;i<10;i++) //Sampling value to reduce variation
    {
      handNum += float(leap.getHands().size());
    }
    println("Hand num sum is:"+handNum);
-   handNum = handNum/5.0;
+   handNum = handNum/10.0;
 
    println("Hand num is: "+handNum);
 
@@ -159,7 +158,7 @@ void draw(){
         glowStartedAt=millis();
        }
 
-       if((millis() > glowStartedAt + 1.5*intervalGap) && s.state=="stay_glow")
+       if((millis() > glowStartedAt + intervalGap) && s.state=="stay_glow")
        {
          s.state="float";
          glowing=false;
@@ -190,22 +189,21 @@ void draw(){
      if(s.state=="move")
      {
        
-        int pointToBeRemoved = insideLetter(s);
+          int pointToBeRemoved = insideLetter(s);
+                        
+          if(pointToBeRemoved>=0)
+          {
+            //println("Point to be removed is: "+pointToBeRemoved);
+            s.state="stay";
+            // occupied.add(new PVector(s.x,s.y));
+            removeNotOccupied(pointToBeRemoved);
+          }
                       
-        if(pointToBeRemoved>=0)
-        {
-          //println("Point to be removed is: "+pointToBeRemoved);
-          s.state="stay";
-          // occupied.add(new PVector(s.x,s.y));
-          removeNotOccupied(pointToBeRemoved);
-        }
-              
-     }
-
+       }
 
        if(handDetected)
        {      
-         if(s.state=="float")
+         if((handDiffX<w2 && handDiffY<h2)||s.state=="float")
          {
            s.state="move";
          }
@@ -232,14 +230,14 @@ void draw(){
     s.move();//move the star
     s.render(); //show the star after movement
 
-    //if(handNum==1 && prevHandNum==1 && !glowing)
-    //{
-    //  String handsInside = "Place both hands over the table.";
-    //  float t=textWidth(handsInside);
-    //  fill(200);
-    //  textSize(20);
-    //  text(handsInside,w2-t/2,h2);
-    //}
+    if(handNum==1 && prevHandNum==1 && !glowing)
+    {
+      String handsInside = "Place both hands over the table.";
+      float t=textWidth(handsInside);
+      fill(200);
+      textSize(20);
+      text(handsInside,w2-t/2,h2);
+    }
   }
   
   removeExtraStars();
